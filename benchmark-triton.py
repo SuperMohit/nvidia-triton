@@ -140,9 +140,7 @@ def main_test(input_texts):
     )
 
     embeddings = results.as_numpy("sentence_embedding")
-
-    embeddings = results.as_numpy("sentence_embedding")
-    print(embeddings)
+    print(embeddings.shape)
 
 def main(input_texts):
     try:
@@ -238,7 +236,7 @@ def run_benchmark(number_of_runs, max_workers, batch_size, input_type, input_tok
     p25_latency, p50_latency, p75_latency, p90_latency, p95_latency, p99_latency = np.percentile(
         latencies, (25, 50, 75, 90, 95, 99))
 
-    throughput = 1 / avg_latency if avg_latency > 0 else 0  # Throughput is the inverse of average latency
+    throughput = (1 / avg_latency) * max_workers if avg_latency > 0 else 0  # Throughput is the inverse of average latency times concurrency
 
     table_data.append(["Request Latency (ms)", input_type, input_tokens, batch_size, max_workers,
         f"{avg_latency * 1000:.2f}", f"{min_latency * 1000:.2f}", f"{max_latency * 1000:.2f}",
