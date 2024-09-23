@@ -129,7 +129,7 @@ def main_test(input_texts):
     inputs.append(input)
     
     
-
+    ## for fp16 - set binary_data=True, fp16 doesn't work for json payload
     outputs.append(httpclient.InferRequestedOutput("sentence_embedding", binary_data=False))
 
     triton_client = httpclient.InferenceServerClient(
