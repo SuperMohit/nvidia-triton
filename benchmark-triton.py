@@ -309,7 +309,7 @@ def start_benchmarking():
     """
 
     for max_workers, batch_size, input_type, input_tokens in data:
-        run_benchmark(2, max_workers, batch_size, input_type, input_tokens)
+        run_benchmark(20, max_workers, batch_size, input_type, input_tokens)
         print(f"Benchmarking completed for {input_type} with {input_tokens} input tokens, {max_workers} threads, and {batch_size} batch size.")
 
     html_table = tabulate(table_data, headers=headers, tablefmt="html")
