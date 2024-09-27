@@ -284,7 +284,7 @@ def start_benchmarking():
 
     data = [
         (1, 64, 'passage', 300),
-        (1, 64, 'passage', 500)
+        (1, 64, 'passage', 500),
         (1, 1, 'query', 20)
     ]
     """
