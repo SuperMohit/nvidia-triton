@@ -69,11 +69,11 @@ passages_500 = [
 def generate_synthetic_query_input(num_queries):
     """Generates synthetic query input text with controlled token size."""
     queries = [
-        "how much {entity} does {person} need in a day once in a while when sick?",    
+        "how much {entity} does {person} need in a day once in a while?",   
         "what is the process of making {dish} in a country like North Korea?",
-        "why is {concept} important for {profession}, is it really necessary to learn it?",
-        "how does {action} affect {object}? Explain in brief without making judgements.",
-        "can you explain {topic} to a beginner? You can use any help like AI for your help"
+        "why is {concept} important for {profession}, is it  necessary to learn it?",
+        "how does {action} affect {object}? Explain in brief without making judgements.", 
+        "can you explain {topic} to a beginner? You can use any help like AI" 
     ]
     
     synthetic_queries = []
