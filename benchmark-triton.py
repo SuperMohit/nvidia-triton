@@ -157,7 +157,7 @@ def main_test(input_texts):
     
     
 
-    outputs.append(httpclient.InferRequestedOutput("sentence_embedding", binary_data=True))
+    #outputs.append(httpclient.InferRequestedOutput("sentence_embedding", binary_data=True))
 
     triton_client = httpclient.InferenceServerClient(
                 url="localhost:8000", verbose=False
