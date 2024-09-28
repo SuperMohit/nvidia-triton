@@ -283,7 +283,7 @@ def run_benchmark(number_of_runs, max_workers, batch_size, input_type, input_tok
 
 
 def start_benchmarking():
-    
+    """
     data = [
         (1, 64, 'passage', 300),
         (1, 64, 'passage', 500),
@@ -305,7 +305,7 @@ def start_benchmarking():
         (13, 1, 'query', 20),
         (15, 1, 'query', 20)
     ]
-    """
+   
 
     for max_workers, batch_size, input_type, input_tokens in data:
         run_benchmark(200, max_workers, batch_size, input_type, input_tokens)
