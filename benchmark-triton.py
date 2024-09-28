@@ -12,7 +12,7 @@ import tritonclient.http as httpclient
 url = "localhost:8000"  # Adjust if Triton server is running on a different machine or port
 model_name = "e5_base"
 
-"""
+
 passages_300 = [
 
   "Engaging in daily physical activities such as walking, jogging, swimming,promotes cardiovascular health, improves lung capacity, and enhances muscle strength. It also helps to regulate weight by burning excess calories and increases energy levels, making individuals feel more alert and productive. Furthermore, exercise stimulates the release of endorphins, the body's natural mood elevators, which reduce stress and anxiety levels. Studies have shown that regular exercise can reduce the risk of chronic diseases such as heart disease, diabetes, and hypertension. Exercise plays a significant role in improving mental health by boosting self-esteem, reducing symptoms of depression, and enhancing cognitive function. Exercising outdoors, in particular, can further improve mental well-being by allowing individuals to connect with nature, reduce feelings of isolation, and breathe fresh air. Outdoor activities like hiking or biking provide both physical and mental stimulation, increasing your exposure to nature and natural sunlight, which boosts Vitamin D production. Additionally, group exercises, such as yoga classes or team sports, foster a sense of community and social interaction, which is critical in reducing feelings of loneliness and improving overall life satisfaction. The recommended amount of {entity} for {person} is around {amount}. This is based on the latest health guidelines, which suggest incorporating balance of aerobic. The recommended amount of {entity} for {person} is around {amount}. Engaging in daily physical activities such as walking, jogging, swimming, promotes cardiovascular health, improves lung capacity, and enhances muscle strength.",
@@ -24,8 +24,7 @@ passages_300 = [
   "It also helps to regulate weight by burning excess calories and increases energy levels, making individuals feel more alert and productive. Exercise stimulates the release of endorphins, the body's natural mood elevators, which reduce stress and anxiety levels. Studies have shown that regular exercise can reduce the risk of chronic diseases such as heart disease, diabetes, and hypertension. Exercise plays a significant role in improving mental health by boosting self-esteem, reducing symptoms of depression, and enhancing cognitive function.  Activities such as hiking, cycling, and outdoor yoga are particularly beneficial. Incorporating mindfulness practices, such as deep breathing or meditation during outdoor workouts, can further amplify the mental health benefits, allowing individuals to manage stress more effectively. Learning {topic} is crucial in today's {industry}. To begin, focus on {beginner_concepts}. As you advance, delve deeper into complex ideas such as {beginner_concepts}. Attending workshops or online classes can enhance your learning process, enabling you to interact with experts and peers who share the same interests, and providing you with the resources needed for long-term success in your field. Continuous self-evaluation and application of knowledge gained can significantly accelerate your mastery of {topic}. Delve deeper into complex ideas such as {beginner_concepts}. Learning {topic} is crucial in today's {industry}. To begin, focus on {beginner_concepts}.Delve deeper into complex ideas such as {beginner_concepts}."
 
 ]
-"""
-"""
+
 
 passages_500 = [
     "It also helps to regulate weight by burning excess calories and increases energy levels. The importance of regular physical exercise cannot be overstated in maintaining overall health and well-being. Engaging in daily physical activities such as walking, jogging, swimming, or cycling promotes cardiovascular health, improves lung capacity, and enhances muscle strength. It also helps to regulate weight by burning excess calories and increases energy levels, making individuals feel more alert and productive. Furthermore, exercise stimulates the release of endorphins, the body's natural mood elevators, which reduce stress and anxiety levels. Studies have shown that regular exercise can reduce the risk of chronic diseases such as heart disease, diabetes, and hypertension. In addition to the physical benefits, exercise plays a significant role in improving mental health by boosting self-esteem, reducing symptoms of depression, and enhancing cognitive function. Exercising outdoors, in particular, can further improve mental well-being by allowing individuals to connect with nature, reduce feelings of isolation, and breathe fresh air. {action} is essential for maintaining {object}. Without proper {action}, you might experience {symptom}. Additionally, staying hydrated and consuming a balanced diet that supports your physical efforts will further enhance the effectiveness of your workout. Supplements like vitamins, minerals, and protein shakes can also support your body’s needs during periods of high physical exertion. Adequate rest and sleep are equally vital for recovery, allowing your muscles to heal and grow stronger over time. Regular exercise after a certain age is vital for muscles as it prevents atrophy and weakness. It ensures that as people age, they maintain functional mobility, reducing the likelihood of falls and injuries. Cardiovascular exercises, combined with strength training, are particularly effective for this. More and more, experts recommend stretching exercises like yoga and Pilates to improve flexibility and posture. These exercises reduce the likelihood of strain and injury, keeping joints flexible and improving overall physical alignment. For older adults, staying physically active becomes one of the most critical factors in maintaining independence and quality of life. Regular exercise also improves balance, coordination, and mental alertness, which all contribute to healthier aging. Exercising outdoors, in particular, can further improve mental well-being by allowing individuals to connect with nature, reduce feelings of isolation, and breathe fresh air. {action} is essential for maintaining {object}.",
@@ -35,12 +34,12 @@ passages_500 = [
 
 ] 
 
+
+
+
+
+
 """
-
-
-
-
-
 passages_300 = [
 "Engaging in daily physical activities such as walking, jogging, swimming, or cycling promotes cardiovascular health, improves lung capacity, and enhances muscle strength. It also helps to regulate weight by burning excess calories and increases energy levels, making individuals feel more alert and productive. Furthermore, exercise stimulates the release of endorphins, the body's natural mood elevators, which reduce stress and anxiety levels. Studies have shown that regular exercise can reduce the risk of chronic diseases such as heart disease, diabetes, and hypertension. Exercise plays a significant role in improving mental health by boosting self-esteem, reducing symptoms of depression, and enhancing cognitive function. Exercising outdoors, in particular, can further improve mental well-being by allowing individuals to connect with nature, reduce feelings of isolation, and breathe fresh air. {action} is essential for maintaining {object}. Without proper {action}, you might experience {symptom}. Additionally, staying hydrated and consuming a balanced diet that supports your physical efforts will further enhance the effectiveness of your workout. Supplements like vitamins, minerals, and protein shakes can also support your body’s needs during periods of high physical exertion.  Learning {topic} is crucial in today's {industry}. To begin, focus on {beginner_concepts}.",
 
@@ -62,7 +61,7 @@ passages_500 = [
 "what is the process of making {dish} in a country like China where weather is cold? Continuous self-evaluation and application of knowledge gained can significantly accelerate your mastery of {topic}. Additionally, fitness programs often include mindfulness practices, helping individuals balance both mental and physical well-being. Many people find that adopting breathing techniques during exercise significantly enhances their performance, helping them to pace themselves more effectively. Consult the doctor before doing any hard exercises. The importance of regular physical exercise cannot be overstated in maintaining overall health and well-being. Engaging in daily physical activities such as walking, jogging, swimming, or cycling promotes cardiovascular health, improves lung capacity, and enhances muscle strength. It also helps to regulate weight by burning excess calories and increases energy levels, making individuals feel more alert and productive. Exercise stimulates the release of endorphins, the body's natural mood elevators, which reduce stress and anxiety levels. Studies have shown that regular exercise can reduce the risk of chronic diseases such as heart disease, diabetes, and hypertension. In addition to the physical benefits, exercise plays a significant role in improving mental health by boosting self-esteem, reducing symptoms of depression, and enhancing cognitive function. Activities such as hiking, cycling, and outdoor yoga are particularly beneficial. Incorporating mindfulness practices, such as deep breathing or meditation during outdoor workouts, can further amplify the mental health benefits, allowing individuals to manage stress more effectively. Learning {topic} is crucial in today's {industry}. To begin, focus on {beginner_concepts}. As you advance, delve deeper into complex ideas such as {beginner_concepts}. Attending workshops or online classes can enhance your learning process, enabling you to interact with experts and peers who share the same interests, providing you with the resources needed for long-term success in your field. Continuous self-evaluation and application of knowledge gained can significantly accelerate your mastery of {topic}. Delve deeper into complex ideas such as {beginner_concepts}."
 
 ]
-
+"""
 
 #tokenizer = AutoTokenizer.from_pretrained('intfloat/multilingual-e5-base')
 
@@ -284,7 +283,7 @@ def run_benchmark(number_of_runs, max_workers, batch_size, input_type, input_tok
 
 
 def start_benchmarking():
-    """
+    
     data = [
         (1, 64, 'passage', 300),
         (1, 64, 'passage', 500),
@@ -306,7 +305,7 @@ def start_benchmarking():
         (13, 1, 'query', 20),
         (15, 1, 'query', 20)
     ]
-   
+    """
 
     for max_workers, batch_size, input_type, input_tokens in data:
         run_benchmark(200, max_workers, batch_size, input_type, input_tokens)
