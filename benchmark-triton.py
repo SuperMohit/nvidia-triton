@@ -143,8 +143,8 @@ def generate_synthetic_passage_input(passages, num_passages=5):
         )
         passage_text = f"passage: {passage}"
         
-        encoding = tiktoken.get_encoding('cl100k_base')
-        print("printing tokens", len(encoding.encode(passage_text)))
+        #encoding = tiktoken.get_encoding('cl100k_base')
+        #print("printing tokens", len(encoding.encode(passage_text)))
         
         synthetic_passages.append(passage_text)
     
