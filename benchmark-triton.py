@@ -173,7 +173,7 @@ def main_test(input_texts):
         outputs=outputs,
     )
 
-    embeddings = results.as_numpy("sentence_embedding")
+    embeddings = results.as_numpy("embeddings")
 
     print(embeddings.shape)
 
