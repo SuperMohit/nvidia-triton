@@ -1,0 +1,7 @@
+{
+    "model": "nvidia/nv-embedqa-e5-v5",
+    "usage": {
+      "prompt_tokens": 0,
+      "total_tokens": 0
+    }
+  }
