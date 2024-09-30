@@ -162,9 +162,14 @@ def get_embeddings(input_text, input_type, api_key):
     
     response = requests.post(url, headers=headers, data=json.dumps(data))
     
-    if response.status_code != 200:
-        print (f"Error: {response.status_code}, {response.text}")
-
+    if response.status_code == 200:
+        response_json = response.json()
+        usage = response_json.get("usage", {})
+        prompt_tokens = usage.get("prompt_tokens", 0)
+        total_tokens = usage.get("total_tokens", 0)
+        print (f"prompt_tokens: {prompt_tokens}, total_tokens: {total_tokens}")
+    else:
+        return f"Error: {response.status_code}, {response.text}"
 
 
 def run_hug_e5(batch_size, input_type, input_tokens):
