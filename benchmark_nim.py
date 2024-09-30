@@ -11,7 +11,7 @@ import requests
 
 
 
-api_key = "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"
+api_key = "<>"
 
 passages_300 = [
 
