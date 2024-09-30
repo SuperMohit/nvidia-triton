@@ -179,7 +179,7 @@ def run_hug_e5(batch_size, input_type, input_tokens):
     
     start_time = time.time()  # Record the start time
     try:
-        get_embeddings(queries)  # Run the main function of hug-e5
+        get_embeddings(queries, input_type, api_key)  # Run the main function of hug-e5
     except Exception as e:
         print(f"Error encountered during execution: {e}")
     
