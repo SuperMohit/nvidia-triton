@@ -1,12 +1,12 @@
-import time
-import numpy as np
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from tabulate import tabulate
+import asyncio
+import json
 import random
-from transformers import AutoTokenizer
-import tiktoken
-import tritonclient.http as httpclient
+import time
+from typing import List
 
+import aiohttp
+import numpy as np
+from tabulate import tabulate
 
 # Specify the Triton server URL and model name
 url = "localhost:8000"  # Adjust if Triton server is running on a different machine or port
@@ -63,14 +63,13 @@ passages_500 = [
 ]
 """
 
-#tokenizer = AutoTokenizer.from_pretrained('intfloat/multilingual-e5-base')
-
-def generate_synthetic_query_input(num_queries):
+# Synthetic data generation functions
+def generate_synthetic_query_input(num_queries: int) -> List[str]:
     """Generates synthetic query input text with controlled token size."""
     queries = [
         "how much {entity} does {person} need in a day once in a while?",   
         "what is the process of making {dish} in a country like North Korea?",
-        "why is {concept} so important for {profession}, is it  necessary to learn it?",
+        "why is {concept} so important for {profession}, is it necessary to learn it?",
         "how does {action} affect {object}? Explain in brief without making judgements about it.", 
         "can you explain {topic} to a beginner? You can use any help like AI tools" 
     ]
@@ -97,15 +96,13 @@ def generate_synthetic_query_input(num_queries):
             object=random.choice(objects),
             topic=random.choice(topics)
         )
-        query_text = f"query: {query}"
+        query_text = f"query: {query}" 
         synthetic_queries.append(query_text)
-
         
     return synthetic_queries
 
-def generate_synthetic_passage_input(passages, num_passages=5):
+def generate_synthetic_passage_input(passages: List[str], num_passages: int) -> List[str]:
     """Generates synthetic passage input text with controlled token size."""
-
     synthetic_passages = []
     entities = ["protein", "vitamin D", "water", "calories"]
     persons = ["a female", "a male", "an athlete", "a child"]
@@ -142,181 +139,123 @@ def generate_synthetic_passage_input(passages, num_passages=5):
             beginner_concepts=random.choice(beginner_concepts)
         )
         passage_text = f"passage: {passage}"
-        
-        #encoding = tiktoken.get_encoding('cl100k_base')
-        #print("printing tokens", len(encoding.encode(passage_text)))
-        
         synthetic_passages.append(passage_text)
-    
+        
     return synthetic_passages
 
+# Asynchronous HTTP request function
+async def get_embeddings(session: aiohttp.ClientSession, input_text: List[str], input_type: str) -> float:
+    """Asynchronously fetch embeddings and return elapsed time."""  
+    start_time = time.perf_counter()
+    input_ids = np.array(input_texts, dtype=object)
 
-
-def main_test(input_texts):
+    # Create inference inputs
     inputs = []
+    inputs.append(InferInput("input_texts", input_ids.shape, "BYTES"))
+    inputs[0].set_data_from_numpy(input_ids)
+
+    # Create inference outputs
     outputs = []
-    #input_texts = [" ".join(["The"] * 256)] * 256
-    input = httpclient.InferInput("text", [len(input_texts),], "BYTES")
-    input.set_data_from_numpy(np.array(input_texts, dtype=object), binary_data=False)
-    inputs.append(input)
+    outputs.append(InferRequestedOutput("sentence_embedding"))
     
-    
-
-    #outputs.append(httpclient.InferRequestedOutput("sentence_embedding", binary_data=True))
-
-    triton_client = httpclient.InferenceServerClient(
-                url="localhost:8000", verbose=False
-            )
-    results = triton_client.infer(
-        "ensemble_model",
-        inputs,
-        outputs=outputs,
-    )
-
-    embeddings = results.as_numpy("embeddings")
-
-    print(embeddings.shape)
-
-    #embeddings = results.as_numpy("sentence_embedding")
-
-   # embeddings = results.as_numpy("sentence_embedding")
-   # print(embeddings)
-
-def main(input_texts):
     try:
-        # Create a Triton client
-        client = httpclient.InferenceServerClient(url=url)
-        encoded_inputs = tokenizer(input_texts, max_length=512, padding=True, truncation=True, return_tensors='pt')
-
-        # Convert PyTorch tensors to NumPy arrays and cast to int64
-        input_ids = encoded_inputs['input_ids'].numpy().astype(np.int64)  # Model expects INT64
-        attention_mask = encoded_inputs['attention_mask'].numpy().astype(np.int64)  # Model expects INT64
-
-        # Debugging: Print shapes and data types to confirm input data
-        print(f"Input_ids shape: {input_ids.shape}, dtype: {input_ids.dtype}")
-        print(f"Attention_mask shape: {attention_mask.shape}, dtype: {attention_mask.dtype}")
-
-    # Create Triton input tensors
-        inputs = []
-        inputs.append(httpclient.InferInput("input_ids", input_ids.shape, "INT64"))  # Use INT64 for input_ids
-        inputs.append(httpclient.InferInput("attention_mask", attention_mask.shape, "INT64"))  # Use INT64 for attention_mask
-
-        # Set the data for the input tensors
-        inputs[0].set_data_from_numpy(input_ids)
-        inputs[1].set_data_from_numpy(attention_mask)
-
-    # Create Triton output tensors (for receiving results)
-        outputs = []
-        outputs.append(httpclient.InferRequestedOutput("sentence_embedding"))
-        outputs.append(httpclient.InferRequestedOutput("token_embeddings"))
-
-    # Make the inference request
-        response = client.infer(model_name=model_name, inputs=inputs, outputs=outputs)
-        print("got response")
-        # Retrieve the output data from the response
-        sentence_embedding = response.as_numpy("sentence_embedding")
-        token_embeddings = response.as_numpy("token_embeddings")
-
-        #print("Sentence embedding", sentence_embedding)
-
-        # Print the result
-        print(f"Sentence Embedding Shape: {sentence_embedding.shape}")
-        print(f"Token Embeddings Shape: {token_embeddings.shape}")    
-
+        # Perform asynchronous inference
+        result = await client.infer(model_name, inputs, outputs=outputs)
+        #embeddings = result.as_numpy("sentence_embedding")
     except Exception as e:
         print(f"Error during inference: {e}")
-        return None
-
-
-def run_hug_e5(batch_size, input_type, input_tokens):
-    if input_type == 'passage':
-        token_input = passages_300 if input_tokens == 300 else passages_500
-        queries = generate_synthetic_passage_input(token_input, batch_size)
-    else:
-        queries = generate_synthetic_query_input(batch_size)
-
-    print(len(queries))
-    
-    start_time = time.time()  # Record the start time
-    try:
-        main_test(queries)  # Run the main function of hug-e5
-    except Exception as e:
-        print(f"Error encountered during execution: {e}")
-    
-    elapsed_time = time.time() - start_time  # Calculate elapsed time
-    print("Execution finished")
-    print(elapsed_time)
-    
+      
+    elapsed_time = (time.perf_counter() - start_time) * 1000 
     return elapsed_time
 
+# Benchmarking function
+async def run_hug_e5(session: aiohttp.ClientSession, batch_size: int, input_type: str, input_tokens: int, semaphore: asyncio.Semaphore) -> float:
+    """Run the huggingface model E5 and measure execution time."""
+    async with semaphore:
+        if input_type == 'passage':
+            token_input = passages_300 if input_tokens == 300 else passages_500
+            queries = generate_synthetic_passage_input(token_input, batch_size)
+        else:
+            queries = generate_synthetic_query_input(batch_size)
 
+        print(f"Processing batch of size {len(queries)}")
+        elapsed_time = await get_embeddings(session, queries, input_type)
+        print(f"Execution finished in {elapsed_time:.2f} ms")
+        return elapsed_time
 
- # Define headers similar to your provided image
-headers = ["Metric", "Input Type", "Input Tokens", "Batch Size", "Concurrency", "Avg (ms)", "Min (ms)", 
-            "Max (ms)", "P99 (ms)", "P95 (ms)", "P90 (ms)", "P75 (ms)", "P50 (ms)", "P25 (ms)", 
-            "Throughput (inputs/s)"]
-
-table_data = []
-
-
-
-def run_benchmark(number_of_runs, max_workers, batch_size, input_type, input_tokens):
+# Benchmark runner
+async def run_benchmark(number_of_runs: int, max_workers: int, batch_size: int, input_type: str, input_tokens: int, table_data: List[List[str]]):
+    """Run benchmark with specified parameters."""
     latencies = []
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(run_hug_e5, batch_size, input_type, input_tokens)
-                   for _ in range(number_of_runs * max_workers)]
-        for future in as_completed(futures):
-            latencies.append(future.result())
+    semaphore = asyncio.Semaphore(max_workers)  # Limit concurrency
 
-    print("thread pool done!")
+    async with aiohttp.ClientSession() as session:
+        tasks = [
+            asyncio.create_task(run_hug_e5(session, batch_size, input_type, input_tokens, semaphore))
+            for _ in range(number_of_runs * max_workers)
+        ]
+
+        for task in asyncio.as_completed(tasks):
+            try:
+                latency = await task
+                latencies.append(latency)
+            except Exception as e:
+                print(f"Task encountered an exception: {e}")
+
+    if not latencies:
+        print("No latencies recorded.")
+        return
+
+    # Calculate required metrics
     avg_latency = np.mean(latencies)
     min_latency = np.min(latencies)
     max_latency = np.max(latencies)
-    # Calculate required metrics
     p25_latency, p50_latency, p75_latency, p90_latency, p95_latency, p99_latency = np.percentile(
         latencies, (25, 50, 75, 90, 95, 99))
+    
+    throughput = (max_workers / (avg_latency / 1000)) if avg_latency > 0 else 0   # Inputs per second
 
-    throughput = max_workers / avg_latency if avg_latency > 0 else 0  # Throughput is the inverse of average latency 
+    table_data.append([
+        "Request Latency (ms)", input_type, input_tokens, batch_size, max_workers,
+        f"{avg_latency:.2f}", f"{min_latency:.2f}", f"{max_latency:.2f}",
+        f"{p99_latency:.2f}", f"{p95_latency:.2f}", f"{p90_latency:.2f}",
+        f"{p75_latency:.2f}", f"{p50_latency:.2f}", f"{p25_latency:.2f}",
+        f"{throughput:.2f}"
+    ])
 
-    table_data.append(["Request Latency (ms)", input_type, input_tokens, batch_size, max_workers,
-        f"{avg_latency * 1000:.2f}", f"{min_latency * 1000:.2f}", f"{max_latency * 1000:.2f}",
-        f"{p99_latency * 1000:.2f}", f"{p95_latency * 1000:.2f}", f"{p90_latency * 1000:.2f}",
-        f"{p75_latency * 1000:.2f}", f"{p50_latency * 1000:.2f}", f"{p25_latency * 1000:.2f}",
-        f"{throughput:.2f}"])
+# Main benchmarking function
+async def start_benchmarking():
+    headers = ["Metric", "Input Type", "Input Tokens", "Batch Size", "Concurrency", "Avg (ms)", "Min (ms)", 
+               "Max (ms)", "P99 (ms)", "P95 (ms)", "P90 (ms)", "P75 (ms)", "P50 (ms)", "P25 (ms)", 
+               "Throughput (inputs/s)"]
+    
+    table_data = []
 
-
-
-def start_benchmarking():
-    """
-    data = [
-        (1, 64, 'passage', 300),
-        (1, 64, 'passage', 500),
-        (1, 1, 'query', 20)
+    benchmark_data = [
+        (200, 1, 64, 'passage', 300),
+        (200, 3, 64, 'passage', 300),
+        (200, 5, 64, 'passage', 300),
+        (200, 1, 64, 'passage', 500),
+        (200, 3, 64, 'passage', 500),
+        (200, 5, 64, 'passage', 500),
+        (200, 1, 1, 'query', 20),
+        (200, 3, 1, 'query', 20),
+        (200, 5, 1, 'query', 20),
+        (200, 7, 1, 'query', 20),
+        (200, 11, 1, 'query', 20),
+        (200, 13, 1, 'query', 20),
+        (200, 15, 1, 'query', 20)
     ]
-    """
-    data = [
-        (1, 64, 'passage', 300),
-        (3, 64, 'passage', 300),
-        (5, 64, 'passage', 300),
-        (1, 64, 'passage', 500),
-        (3, 64, 'passage', 500),
-        (5, 64, 'passage', 500),
-        (1, 1, 'query', 20),
-        (3, 1, 'query', 20),
-        (5, 1, 'query', 20),
-        (7, 1, 'query', 20),
-        (11, 1, 'query', 20),
-        (13, 1, 'query', 20),
-        (15, 1, 'query', 20)
-    ]
-   
 
-    for max_workers, batch_size, input_type, input_tokens in data:
-        run_benchmark(200, max_workers, batch_size, input_type, input_tokens)
-        print(f"Benchmarking completed for {input_type} with {input_tokens} input tokens, {max_workers} threads, and {batch_size} batch size.")
+    for number_of_runs, max_workers, batch_size, input_type, input_tokens in benchmark_data:
+        print(f"Running benchmark: {input_type}, {input_tokens} tokens, batch size {batch_size}, concurrency {max_workers}")
+        await run_benchmark(number_of_runs, max_workers, batch_size, input_type, input_tokens, table_data)
+        print(f"Benchmarking completed for {input_type} with {input_tokens} input tokens, {max_workers} concurrency, and {batch_size} batch size.")
 
+    # Generate HTML table
     html_table = tabulate(table_data, headers=headers, tablefmt="html")
     print(html_table)
 
 if __name__ == "__main__":
-    start_benchmarking()
+    asyncio.run(start_benchmarking())
+
