@@ -188,7 +188,7 @@ async def run_benchmark(number_of_runs: int, max_workers: int, batch_size: int, 
     p25_latency, p50_latency, p75_latency, p90_latency, p95_latency, p99_latency = np.percentile(
         latencies, (25, 50, 75, 90, 95, 99))
     
-    throughput = max_workers / avg_latency if avg_latency > 0 else 0   # Inputs per second
+    throughput = (max_workers / (avg_latency / 1000)) if avg_latency > 0 else 0   # Inputs per second
 
     table_data.append([
         "Request Latency (ms)", input_type, input_tokens, batch_size, max_workers,
