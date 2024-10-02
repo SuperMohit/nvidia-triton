@@ -35,7 +35,7 @@ passages_500 = [
 ] 
 
 # Synthetic data generation functions
-def generate_synthetic_query_input(num_queries: int) -> List[str]:
+def generate_synthetic_query_input(num_queries: int =1) -> List[str]:
     """Generates synthetic query input text with controlled token size."""
     queries = [
         "how much {entity} does {person} need in a day once in a while?",   
@@ -70,8 +70,6 @@ def generate_synthetic_query_input(num_queries: int) -> List[str]:
         
         query_text = f"query: {query}" 
         synthetic_queries.append(query_text)
-
-        synthetic_queries.append(query)
         
     return synthetic_queries
 
@@ -130,7 +128,7 @@ async def get_embeddings(session: aiohttp.ClientSession, input_text: List[str], 
         "name": "text", 
         "shape": [len(input_text)], 
         "datatype": "BYTES", 
-        "data": input_text
+        "data": np.array(input_text, dtype=object)
     }]
     
     # Prepare the payload for the HTTP request
@@ -143,7 +141,10 @@ async def get_embeddings(session: aiohttp.ClientSession, input_text: List[str], 
         async with session.post(EMBEDDING_URL, headers=headers, json=payload) as response:
             if response.status == 200:
                 response_json = await response.json()
-                print(response_json)
+                usage = response_json.get("usage", {})
+                prompt_tokens = usage.get("prompt_tokens", 0)
+                total_tokens = usage.get("total_tokens", 0)
+                print(f"prompt_tokens: {prompt_tokens}, total_tokens: {total_tokens}")
             else:
                 error_text = await response.text()
                 print(f"Error: {response.status}, {error_text}")
@@ -153,7 +154,7 @@ async def get_embeddings(session: aiohttp.ClientSession, input_text: List[str], 
     return elapsed_time
 
 # Benchmarking function
-async def run_hug_e5(session: aiohttp.ClientSession, batch_size: int, input_type: str, input_tokens: int, semaphore: asyncio.Semaphore) -> float:
+async def run_hug_e5(batch_size: int, input_type: str, input_tokens: int, semaphore: asyncio.Semaphore) -> float:
     """Run the huggingface model E5 and measure execution time."""
     async with semaphore:
         if input_type == 'passage':
@@ -163,9 +164,10 @@ async def run_hug_e5(session: aiohttp.ClientSession, batch_size: int, input_type
             queries = generate_synthetic_query_input(batch_size)
 
         print(f"Processing batch of size {len(queries)}")
-        elapsed_time = await get_embeddings(session, queries, input_type)
-        print(f"Execution finished in {elapsed_time:.2f} ms")
-        return elapsed_time
+        async with aiohttp.ClientSession() as session:
+            elapsed_time = await get_embeddings(session,queries, input_type)
+            print(f"Execution finished in {elapsed_time:.2f} ms")
+            return elapsed_time
 
 # Benchmark runner
 async def run_benchmark(number_of_runs: int, max_workers: int, batch_size: int, input_type: str, input_tokens: int, table_data: List[List[str]]):
@@ -173,18 +175,18 @@ async def run_benchmark(number_of_runs: int, max_workers: int, batch_size: int, 
     latencies = []
     semaphore = asyncio.Semaphore(max_workers)  # Limit concurrency
 
-    async with aiohttp.ClientSession() as session:
-        tasks = [
-            asyncio.create_task(run_hug_e5(session, batch_size, input_type, input_tokens, semaphore))
-            for _ in range(number_of_runs * max_workers)
-        ]
+    
+    tasks = [
+        asyncio.create_task(run_hug_e5(batch_size, input_type, input_tokens, semaphore))
+        for _ in range(number_of_runs * max_workers)
+    ]
 
-        for task in asyncio.as_completed(tasks):
-            try:
-                latency = await task
-                latencies.append(latency)
-            except Exception as e:
-                print(f"Task encountered an exception: {e}")
+    for task in asyncio.as_completed(tasks):
+        try:
+            latency = await task
+            latencies.append(latency)
+        except Exception as e:
+            print(f"Task encountered an exception: {e}")
 
     if not latencies:
         print("No latencies recorded.")
