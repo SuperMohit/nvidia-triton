@@ -143,10 +143,7 @@ async def get_embeddings(session: aiohttp.ClientSession, input_text: List[str], 
         async with session.post(EMBEDDING_URL, headers=headers, json=payload) as response:
             if response.status == 200:
                 response_json = await response.json()
-                usage = response_json.get("usage", {})
-                prompt_tokens = usage.get("prompt_tokens", 0)
-                total_tokens = usage.get("total_tokens", 0)
-                print(f"prompt_tokens: {prompt_tokens}, total_tokens: {total_tokens}")
+                print(response_json)
             else:
                 error_text = await response.text()
                 print(f"Error: {response.status}, {error_text}")
