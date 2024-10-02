@@ -161,8 +161,8 @@ async def get_embeddings(input_texts: List[str]) -> float:
         outputs=outputs
     )
 
-    embeddings = results.as_numpy("embeddings")
-    print(embeddings.shape)
+    # embeddings = results.as_numpy("embeddings")
+    # print(embeddings.shape)
     await triton_client.close()  
     elapsed_time = (time.perf_counter() - start_time) * 1000 
 
