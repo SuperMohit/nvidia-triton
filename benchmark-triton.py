@@ -3,7 +3,7 @@ import json
 import random
 import time
 from typing import List
-from tritonclient.http.aio as httpclient
+import tritonclient.http.aio as httpclient
 import aiohttp
 import numpy as np
 from tabulate import tabulate
