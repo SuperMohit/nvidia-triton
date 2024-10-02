@@ -3,7 +3,7 @@ import json
 import random
 import time
 from typing import List
-
+from tritonclient.http.aio as httpclient
 import aiohttp
 import numpy as np
 from tabulate import tabulate
@@ -143,43 +143,38 @@ def generate_synthetic_passage_input(passages: List[str], num_passages: int) -> 
         
     return synthetic_passages
 
-# Asynchronous HTTP request function
-async def get_embeddings(session: aiohttp.ClientSession, input_text: List[str], input_type: str) -> float:
+async def get_embeddings(input_texts: List[str]) -> float:
     """Asynchronously fetch embeddings and return elapsed time."""  
     start_time = time.perf_counter()
-    input_ids = np.array(input_texts, dtype=object)
-
-    # Create inference inputs
     inputs = []
-    inputs.append(InferInput("input_texts", input_ids.shape, "BYTES"))
-    inputs[0].set_data_from_numpy(input_ids)
-
-    # Create inference outputs
-    outputs = []
-    outputs.append(InferRequestedOutput("sentence_embedding"))
+    input = httpclient.InferInput("text", [len(input_texts),], "BYTES")
+    input.set_data_from_numpy(np.array(input_texts, dtype=object), binary_data=False)
+    inputs.append(input)
     
-    try:
-        # Perform asynchronous inference
-        result = await client.infer(model_name, inputs, outputs=outputs)
-        #embeddings = result.as_numpy("sentence_embedding")
-    except Exception as e:
-        print(f"Error during inference: {e}")
+    outputs = []
+    triton_client = httpclient.InferenceServerClient(
+                url="localhost:8000", verbose=False
+            )
+    results = await triton_client.infer(
+        "ensemble_model",
+        inputs,
+        outputs=outputs
+    )
+    embeddings = results.as_numpy("embeddings")
+    print(embeddings.shape)
       
     elapsed_time = (time.perf_counter() - start_time) * 1000 
+
+    
     return elapsed_time
 
-# Benchmarking function
-async def run_hug_e5(session: aiohttp.ClientSession, batch_size: int, input_type: str, input_tokens: int, semaphore: asyncio.Semaphore) -> float:
+async def run_hug_e5(batch_size: int, input_type: str, semaphore: asyncio.Semaphore) -> float:
     """Run the huggingface model E5 and measure execution time."""
     async with semaphore:
-        if input_type == 'passage':
-            token_input = passages_300 if input_tokens == 300 else passages_500
-            queries = generate_synthetic_passage_input(token_input, batch_size)
-        else:
-            queries = generate_synthetic_query_input(batch_size)
+        queries = generate_synthetic_query_input(batch_size)
 
         print(f"Processing batch of size {len(queries)}")
-        elapsed_time = await get_embeddings(session, queries, input_type)
+        elapsed_time = await get_embeddings(queries, input_type)
         print(f"Execution finished in {elapsed_time:.2f} ms")
         return elapsed_time
 
@@ -189,13 +184,13 @@ async def run_benchmark(number_of_runs: int, max_workers: int, batch_size: int, 
     latencies = []
     semaphore = asyncio.Semaphore(max_workers)  # Limit concurrency
 
-    async with aiohttp.ClientSession() as session:
-        tasks = [
-            asyncio.create_task(run_hug_e5(session, batch_size, input_type, input_tokens, semaphore))
+
+    tasks = [
+            asyncio.create_task(run_hug_e5(batch_size, input_type, input_tokens, semaphore))
             for _ in range(number_of_runs * max_workers)
         ]
 
-        for task in asyncio.as_completed(tasks):
+    for task in asyncio.as_completed(tasks):
             try:
                 latency = await task
                 latencies.append(latency)
@@ -246,6 +241,8 @@ async def start_benchmarking():
         (200, 13, 1, 'query', 20),
         (200, 15, 1, 'query', 20)
     ]
+
+   
 
     for number_of_runs, max_workers, batch_size, input_type, input_tokens in benchmark_data:
         print(f"Running benchmark: {input_type}, {input_tokens} tokens, batch size {batch_size}, concurrency {max_workers}")
