@@ -168,13 +168,17 @@ async def get_embeddings(input_texts: List[str]) -> float:
     
     return elapsed_time
 
-async def run_hug_e5(batch_size: int, input_type: str, semaphore: asyncio.Semaphore) -> float:
+async def run_hug_e5(batch_size: int, input_type: str, input_tokens: int,semaphore: asyncio.Semaphore) -> float:
     """Run the huggingface model E5 and measure execution time."""
     async with semaphore:
-        queries = generate_synthetic_query_input(batch_size)
+        if input_type == 'passage':
+            token_input = passages_300 if input_tokens == 300 else passages_500
+            queries = generate_synthetic_passage_input(token_input, batch_size)
+        else:
+            queries = generate_synthetic_query_input(batch_size)
 
         print(f"Processing batch of size {len(queries)}")
-        elapsed_time = await get_embeddings(queries, input_type)
+        elapsed_time = await get_embeddings(queries)
         print(f"Execution finished in {elapsed_time:.2f} ms")
         return elapsed_time
 
@@ -255,4 +259,3 @@ async def start_benchmarking():
 
 if __name__ == "__main__":
     asyncio.run(start_benchmarking())
-
