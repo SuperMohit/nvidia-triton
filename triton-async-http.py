@@ -130,7 +130,7 @@ async def get_embeddings(session: aiohttp.ClientSession, input_text: List[str], 
         "name": "text", 
         "shape": [len(input_text)], 
         "datatype": "BYTES", 
-        "data": np.array(input_text, dtype=object)
+        "data": input_text
     }]
     
     # Prepare the payload for the HTTP request
