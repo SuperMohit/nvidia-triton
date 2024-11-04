@@ -5,7 +5,7 @@ This repository provides scripts and examples to facilitate model export to ONNX
 Reports:
 
 
-Results:
+A30 Results:
 
 e5-multilingual-base   
 ![Alt text](./reports/A30/results-e5-multilingual-base.png)
@@ -18,6 +18,22 @@ e5-large-mixed
 
 e5-large-fp16
 ![Alt text](./reports/A30/results-e5-large-mixed.png)
+
+
+H100 
+
+e5-large 
+![Alt text](./reports/h100/e5-large-h100.png)
+
+e5-large-fp16
+![Alt text](./reports/h100/e5-large-fp16.png)
+
+e5-large-mixed
+![Alt text](./reports/h100/e5-large-o4.png)
+
+nv-embedqa-e5-v5
+![Alt text](./reports/h100/nv-embedqa-e5-v5.png)
+
 
 
 
